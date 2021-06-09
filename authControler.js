@@ -20,14 +20,14 @@ class authController {
             if (!errors.isEmpty()) {
                 return res.status(400).json({ message: "Error validation", errors });
             }
-            const { userName, password } = req.body;
+            const { userName, password, email, dataRegistration, lastLoginData, status} = req.body;
             const candidate = await User.findOne({ userName });
             if (candidate) {
                 return res.status(400).json({massage: "A user with the same name already exists!"})
             }
             const hashPassword = bcrypt.hashSync(password, 5);
             const userRole = await Role.findOne({value: "USER"})
-            const user = new User({ userName, password: hashPassword, roles: [userRole.value] });
+            const user = new User({ userName, password: hashPassword, roles: [userRole.value], email, dataRegistration, lastLoginData, status});
             await user.save();
             return res.json({massage: "User registered successfully!"})
         } catch (e) {
@@ -62,6 +62,29 @@ class authController {
         } catch (e) {
             
         }        
+    }
+
+    async deleteUser(req, res){
+        try {
+            const { usersName } = req.body;
+            await User.deleteMany({ userName: { $in: usersName } });
+            return res.json({ massage: "User delete!" });
+        } catch (e) {
+            res.status(400).json({massage: 'error delete'})
+        }
+    }
+
+    async updateUser(req, res){
+        try {
+            const { usersName } = req.body;
+            await User.updateMany(
+                { userName: { $in: usersName } },
+                { $set: { status: false } }
+              );
+            return res.json({ massage: "User block!" });
+        } catch (e) {
+            res.status(400).json({massage: 'error update'})
+        }
     }
 }
 
