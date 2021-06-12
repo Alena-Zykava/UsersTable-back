@@ -22,15 +22,14 @@ class authController {
             const { userName, password, email, dataRegistration, lastLoginData, status} = req.body;
             const candidate = await User.findOne({ userName });
             if (candidate) {
-                return res.status(400).json({massage: "A user with the same name already exists!"})
+                return res.status(400).json({massage: "A user with the same name already exists"})
             }
             const hashPassword = bcrypt.hashSync(password, 5);
             
             const user = new User({ userName, password: hashPassword, email, dataRegistration, lastLoginData, status});
             await user.save();
-            return res.json({massage: "User registered successfully!"})
-        } catch (e) {
-            console.log(e);
+            return res.json({massage: "User registered successfully"})
+        } catch (e) {            
             res.status(400).json({massage: 'Registration error'})
         }
     }
@@ -49,39 +48,45 @@ class authController {
             const token = generateAccessToken(user._id);
             return res.json({ token, userName, userId: user._id });
         } catch (e) {
-            console.log(e);
             res.status(400).json({massage: 'Login error'})
         }        
     }
 
-    async getUsers(req, res) {        
-        try {
-            const users = await User.find();
-            return res.json(users);
-        } catch (e) {                
-        }                      
+    async getUsers(req, res) {
+        const id = req.user.id;
+        const user = await User.findOne({ _id: id });
+        if (user && user.status) {
+            try {
+                const users = await User.find();
+                return res.json(users);
+             } catch (e) {                
+            } 
+        } else {
+            res.status(403).json({massage: 'User not authorization'})
+        }
+                             
     }
 
     async deleteUser(req, res){
         try {
             const { usersName } = req.body;
             await User.deleteMany({ userName: { $in: usersName } });
-            return res.json({ massage: "User delete!" });
+            return res.json({ massage: "User delete" });
         } catch (e) {
-            res.status(400).json({massage: 'error delete'})
+            res.status(400).json({massage: 'Error delete'})
         }
     }
 
     async updateUser(req, res){
         try {
-            const { usersName } = req.body;
+            const { usersName, status } = req.body;
             await User.updateMany(
                 { userName: { $in: usersName } },
-                { $set: { status: false } }
+                { $set: { status } }
               );
-            return res.json({ massage: "User block!" });
+            return res.json({ massage: "User update" });
         } catch (e) {
-            res.status(400).json({massage: 'error update'})
+            res.status(400).json({massage: 'Error update'})
         }
     }
 }
