@@ -1,14 +1,13 @@
 const User = require('./models/User');
-const Role = require('./models/Role');
+
 const bcrypt = require('bcryptjs');
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { secret } = require('./config');
 
-const generateAccessToken = (id, roles) => {
+const generateAccessToken = (id) => {
     const payload = {
-        id,
-        roles
+        id
     }
     return jwt.sign(payload, secret, { expiresIn: "24h" });
 }
@@ -26,8 +25,8 @@ class authController {
                 return res.status(400).json({massage: "A user with the same name already exists!"})
             }
             const hashPassword = bcrypt.hashSync(password, 5);
-            const userRole = await Role.findOne({value: "USER"})
-            const user = new User({ userName, password: hashPassword, roles: [userRole.value], email, dataRegistration, lastLoginData, status});
+            
+            const user = new User({ userName, password: hashPassword, email, dataRegistration, lastLoginData, status});
             await user.save();
             return res.json({massage: "User registered successfully!"})
         } catch (e) {
@@ -47,21 +46,20 @@ class authController {
             if (!isValidPassword) {
                 return res.status(400).json({ massage: "Incorrect password entered" });
             };
-            const token = generateAccessToken(user._id, user.roles);
-            return res.json({ token });
+            const token = generateAccessToken(user._id);
+            return res.json({ token, userName, userId: user._id });
         } catch (e) {
             console.log(e);
             res.status(400).json({massage: 'Login error'})
         }        
     }
 
-    async getUsers(req, res) {
+    async getUsers(req, res) {        
         try {
             const users = await User.find();
             return res.json(users);
-        } catch (e) {
-            
-        }        
+        } catch (e) {                
+        }                      
     }
 
     async deleteUser(req, res){

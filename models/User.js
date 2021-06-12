@@ -6,8 +6,7 @@ const User = new Schema({
     email: { type: String, required: true },
     dataRegistration: { type: String, required: true },
     lastLoginData: { type: String, required: true },
-    status: { type: Boolean, required: true },
-    roles: [{ type: String, ref: 'Role' }]
+    status: { type: Boolean, required: true }
 });
 
 module.exports = model('User', User);
